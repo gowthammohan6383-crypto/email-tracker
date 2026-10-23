@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://backend:5000
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=postgresql://mailpulse:secret@db:5432/mailpulse
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=change-this-in-production
+      - JWT_SECRET_KEY=jwt-change-this-in-production
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=mailpulse
+      - POSTGRES_USER=mailpulse
+      - POSTGRES_PASSWORD=secret
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:
